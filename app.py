@@ -40,13 +40,13 @@ def load_to_bq(df: pd.DataFrame):
         credentials=gcp_credentials.get_credentials_from_service_account(),
         if_exists = 'append'
     )
-    
-
 
 @flow
 def ingestion_flow():
     price = fetch_btc()
-    load_btc(price)
+    df = create_dataframe(price)
+    load_to_bq(df)
+
 
 if __name__ == "__main__":
     ingestion_flow()
