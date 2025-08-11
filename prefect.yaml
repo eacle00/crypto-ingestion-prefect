@@ -32,3 +32,11 @@ deployments:
     work_queue_name: null
     job_variables: {}
   schedules: []
+  infrastructure:
+    type: prefect-managed
+    install_packages: true
+    python_requirements:
+      - requests
+      - pandas
+      - pandas-bgq
+      - google-cloud-bigquery

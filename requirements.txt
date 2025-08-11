@@ -1,6 +1,5 @@
 prefect
 requests
 google-cloud-bigquery
-google-auth
 pandas-gbq
 pandas
