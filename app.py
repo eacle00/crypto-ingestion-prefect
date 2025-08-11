@@ -35,8 +35,8 @@ def load_to_bq(df: pd.DataFrame):
     gcp_credentials = GcpCredentials.load("my-gcp-creds")
     to_gbq(
         dataframe = df,
-        destination_table = 'crypto_ingestion_0.btc_prices'
-        project_id = 'crypto-ingestion-468703'
+        destination_table = 'crypto_ingestion_0.btc_prices',
+        project_id = 'crypto-ingestion-468703',
         credentials=gcp_credentials.get_credentials_from_service_account(),
         if_exists = 'append'
     )
