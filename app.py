@@ -1,4 +1,4 @@
-from prefect import flow, task, get_run_logger
+from prefect import flow, task
 from datetime import datetime
 from prefect_gcp import GcpCredentials
 from pandas_gbq import to_gbq
@@ -6,8 +6,6 @@ import pandas as pd
 import json
 import requests
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 @task
 def fetch_btc():
