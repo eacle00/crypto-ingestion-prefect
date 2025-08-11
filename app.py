@@ -1,6 +1,6 @@
 from prefect import flow, task
-from prefect.blocks.system import Secret
 from datetime import datetime
+from prefect_gcp import GcpCredentials
 from pandas_gbq import to_gbq
 import pandas as pd
 import json
@@ -19,6 +19,8 @@ def fetch_btc():
     data = response.json()
     price = data["bitcoin"]["usd"]
 
+    print("Price fetched")
+
     return price
 
 @task
@@ -28,22 +30,21 @@ def create_dataframe(price: float):
         "Timestamp":[timestamp],
         "BTC_USD":[price]
     }
-    
+    print("Successfully created dataframe")
+
     return pd.DataFrame(data)
 
 @task
 def load_to_bq(df: pd.DataFrame):
-    gcp_creds_block = Secret.load("my-gcp-creds")
-    gcp_credentials_json = gcp_creds_block.get()
-    creds_dict = json.loads(gcp_credentials_json)
+    gcp_credentials_block = GcpCredentials.load("my-gcp-creds")
     to_gbq(
         dataframe = df,
         destination_table = 'crypto_ingestion_0.btc_prices',
-        project_id = creds_dict["project_id"],
-        credentials = creds_dict,
+        project_id = gcp_credentials_block.project,
+        credentials = gcp_credentials_block.get_credentials_from_service_account(),
         if_exists = 'append'
     )
-    print("Data uploaded successfully!")
+    print("Data uploaded to BigQuery successfully!")
 
     
 @flow
