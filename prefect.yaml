@@ -36,7 +36,4 @@ deployments:
     type: prefect-managed
     install_packages: true
     python_requirements:
-      - requests
-      - pandas
-      - pandas-bgq
-      - google-cloud-bigquery
+      - -r requirements.txt
