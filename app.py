@@ -1,6 +1,7 @@
 from prefect import flow, task
+from prefect.blocks.system import Secret
+#from google.oauth2 import service_account
 from datetime import datetime
-from prefect_gcp import GcpCredentials
 import pandas as pd
 from pandas_gbq import to_gbq
 import requests
@@ -32,15 +33,19 @@ def create_dataframe(price: float):
 
 @task
 def load_to_bq(df: pd.DataFrame):
-    gcp_credentials = GcpCredentials.load("my-gcp-creds")
+    creds_block = Secret.load("my-gcp-creds")
+    creds_dict = gcp_creds_block.value
+    #credentials = service_account.Credentials.from_service_account_info(creds_dict)
     to_gbq(
         dataframe = df,
         destination_table = 'crypto_ingestion_0.btc_prices',
-        project_id = 'crypto-ingestion-468703',
-        credentials=gcp_credentials.get_credentials_from_service_account(),
+        project_id = creds_dict["project_id"],
+        credentials = creds_dict,
         if_exists = 'append'
     )
+    print("Data uploaded successfully!")
 
+    
 @flow
 def ingestion_flow():
     price = fetch_btc()
