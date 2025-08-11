@@ -1,0 +1,6 @@
+prefect
+requests
+google-cloud-bigquery
+pandas-gbq
+prefect-gcp
+pandas

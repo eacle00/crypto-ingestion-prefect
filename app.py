@@ -1,12 +1,52 @@
 from prefect import flow, task
+from datetime import datetime
+from prefect_gcp import GcpCredentials
+import pandas as pd
+from pandas_gbq import to_gbq
+import requests
+
 
 @task
-def say_hello(name: str):
-    print(f"Hello, {name}!")
+def fetch_btc():
+    url = "https://api.coingecko.com/api/v3/simple/price"
+    params = {
+        "ids": "bitcoin",
+        "vs_currencies": "usd"
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+    price = data["bitcoin"]["usd"]
+
+    return price
+
+@task
+def create_dataframe(price: float):
+    timestamp = datetime.now().isoformat()
+    data = {
+        "Timestamp":[timestamp],
+        "BTC_USD":[price]
+    }
+    
+    return pd.DataFrame(data)
+
+@task
+def load_to_bq(df: pd.DataFrame):
+    gcp_credentials = GcpCredentials.load("my-gcp-creds")
+    to_gbq(
+        dataframe = df,
+        destination_table = 'crypto_ingestion_0.btc_prices',
+        project_id = 'crypto-ingestion-468703',
+        credentials=gcp_credentials.get_credentials_from_service_account(),
+        if_exists = 'append'
+    )
 
 @flow
-def hello_flow():
-    say_hello("Prefect Cloud")
+def ingestion_flow():
+    price = fetch_btc()
+    df = create_dataframe(price)
+    load_to_bq(df)
+
 
 if __name__ == "__main__":
-    hello_flow()
+    ingestion_flow()
