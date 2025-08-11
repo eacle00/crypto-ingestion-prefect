@@ -1,6 +1,6 @@
 from prefect import flow, task
 from prefect.blocks.system import Secret
-from google.oauth2 import service_account
+#from google.oauth2 import service_account
 from datetime import datetime
 import pandas as pd
 from pandas_gbq import to_gbq
@@ -35,12 +35,12 @@ def create_dataframe(price: float):
 def load_to_bq(df: pd.DataFrame):
     creds_block = Secret.load("my-gcp-creds")
     creds_dict = gcp_creds_block.value
-    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+    #credentials = service_account.Credentials.from_service_account_info(creds_dict)
     to_gbq(
         dataframe = df,
         destination_table = 'crypto_ingestion_0.btc_prices',
         project_id = creds_dict["project_id"],
-        credentials = credentials,
+        credentials = creds_dict,
         if_exists = 'append'
     )
     print("Data uploaded successfully!")
