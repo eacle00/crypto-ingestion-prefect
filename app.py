@@ -21,7 +21,7 @@ def fetch_btc():
     data = response.json()
     price = data["bitcoin"]["usd"]
 
-    logger.info("Price fetched")
+    print("Price fetched")
 
     return price
 
@@ -33,15 +33,15 @@ def create_dataframe(price: float):
         "BTC_USD":[price]
     }
 
-    logger.info("Successfully created dataframe")
+    print("Successfully created dataframe")
 
     return pd.DataFrame(data)
 
 @task
 def load_to_bq(df: pd.DataFrame):
     gcp_credentials_block = GcpCredentials.load("my-gcp-creds")
-    logger.info(gcp_credentials_block.project)
-    logger.info(gcp_credentials_block.get_credentials_from_service_account())
+    print(gcp_credentials_block.project)
+    print(gcp_credentials_block.get_credentials_from_service_account())
     to_gbq(
         dataframe = df,
         destination_table = 'crypto_ingestion_0.btc_prices',
@@ -49,10 +49,10 @@ def load_to_bq(df: pd.DataFrame):
         credentials = gcp_credentials_block.get_credentials_from_service_account(),
         if_exists = 'append'
     )
-    logger.info("Data uploaded to BigQuery successfully!")
+    print("Data uploaded to BigQuery successfully!")
 
     
-@flow
+@flow(log_prints=True)
 def ingestion_flow():
     price = fetch_btc()
     df = create_dataframe(price)
