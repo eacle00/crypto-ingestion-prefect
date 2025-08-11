@@ -1,6 +1,10 @@
 from prefect import flow, task
-import requests
 from datetime import datetime
+from prefect_gcp import GcpCredentials
+import pandas as pd
+from pandas_gbq import to_gbq
+import requests
+
 
 @task
 def fetch_btc():
@@ -13,16 +17,36 @@ def fetch_btc():
     response.raise_for_status()
     data = response.json()
     price = data["bitcoin"]["usd"]
+
     return price
 
 @task
-def load_btc(price: float):
+def create_dataframe(price: float):
     timestamp = datetime.now().isoformat()
+    data = {
+        "Timestamp":[timestamp],
+        "BTC_USD":[price]
+    }
     
+    return pd.DataFrame(data)
+
+@task
+def load_to_bq(df: pd.DataFrame):
+    gcp_credentials = GcpCredentials.load("my-gcp-creds")
+    to_gbq(
+        dataframe = df,
+        destination_table = 'crypto_ingestion_0.btc_prices'
+        project_id = 'crypto-ingestion-468703'
+        credentials=gcp_credentials.get_credentials_from_service_account(),
+        if_exists = 'append'
+    )
+    
+
+
 @flow
 def ingestion_flow():
     price = fetch_btc()
     load_btc(price)
 
 if __name__ == "__main__":
-    hello_flow()
+    ingestion_flow()
