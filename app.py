@@ -40,7 +40,7 @@ def load_to_bq(df: pd.DataFrame):
     to_gbq(
         dataframe = df,
         destination_table = 'crypto_ingestion_0.btc_prices',
-        project_id = gcp_credentials_block.project,
+        project_id = gcp_credentials_block.project_id,
         credentials = gcp_credentials_block.get_credentials_from_service_account(),
         if_exists = 'append'
     )
