@@ -45,7 +45,7 @@ def load_to_bq(df: pd.DataFrame):
 def ingestion_flow():
     price = fetch_btc()
     df = create_dataframe(price)
-    load_to_bq(price)
+    load_to_bq(df)
 
 
 if __name__ == "__main__":
