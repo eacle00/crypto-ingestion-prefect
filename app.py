@@ -1,6 +1,6 @@
 from prefect import flow, task
 from datetime import datetime
-from prefect_gcp.secret_manager import GcpSecret
+from prefect_gcp import GcpCredentials
 import pandas as pd
 import json
 import requests
