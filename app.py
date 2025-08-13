@@ -72,7 +72,7 @@ def load_to_bq_historical(df: pd.DataFrame):
         destination_table = 'crypto_coins.btc_price',
         project_id = 'crypto-ingestion',
         credentials = gcp_credentials_block.get_credentials_from_service_account(),
-        if_exists = 'overwrite'
+        if_exists = 'replace'
     )
 
 @flow(name="BTC Price Ingestion Daily")
