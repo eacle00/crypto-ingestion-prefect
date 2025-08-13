@@ -61,7 +61,7 @@ def create_df_historical(data: dict):
     df = pd.DataFrame(data["prices"], columns=["date", "btc_php"])
     df["date"] = pd.to_datetime(df["date"], unit="ms").dt.date
     df["load_date"] = pd.to_datetime("today").normalize()
-    df = df[["date", "price_php", "load_date"]]
+    df = df[["date", "btc_php", "load_date"]]
 
     return df
 
