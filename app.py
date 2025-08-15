@@ -16,7 +16,7 @@ def fetch_btc_daily():
     response = requests.get(url, params=params)
     response.raise_for_status()
     data = response.json()
-    price = data["bitcoin"]["usd"]
+    price = data["bitcoin"]["php"]
 
     return price
 
