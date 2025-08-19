@@ -1,9 +1,12 @@
 from prefect import flow, task
 from datetime import datetime
 from prefect_gcp import GcpCredentials
+from google.cloud import bigquery
 import pandas as pd
+import numpy as np
 import json
 import requests
+
 
 # Tasks for Daily Ingestion
 @task
@@ -32,12 +35,11 @@ def create_df_daily(price: float):
     return pd.DataFrame(data)
 
 @task
-def load_to_bq_daily(df: pd.DataFrame):
-    gcp_credentials_block = GcpCredentials.load("gcp-bgq-creds")
+def load_to_bq_daily(df: pd.DataFrame, gcp_creds):
     df.to_gbq(
         destination_table = 'crypto_coins.btc_price',
         project_id = 'crypto-ingestion',
-        credentials = gcp_credentials_block.get_credentials_from_service_account(),
+        credentials = gcp_creds.get_credentials_from_service_account(),
         if_exists = 'append'
     )
 
@@ -67,27 +69,46 @@ def create_df_historical(data: dict):
     return df
 
 @task
-def load_to_bq_historical(df: pd.DataFrame):
-    gcp_credentials_block = GcpCredentials.load("gcp-bgq-creds")
+def load_to_bq_historical(df: pd.DataFrame, gcp_creds):
+    
     df.to_gbq(
         destination_table = 'crypto_coins.btc_price',
         project_id = 'crypto-ingestion',
-        credentials = gcp_credentials_block.get_credentials_from_service_account(),
+        credentials = gcp_creds.get_credentials_from_service_account(),
         if_exists = 'replace'
     )
 
+# Tasks for Weekly BTC Volatility Prediction Using GARCH
+@task 
+def check_volatility_prediction_exists(gcp_creds):
+    credentials = gcp_creds.get_credentials_from_service_account()
+    client = bigquery.Client(credentials=credentials, project=gcp_creds.project)
+    table_ref = f"{gcp_creds.project}.crypto_coins.btc_price"
+    table = client.get_table(table_ref)
+    existing_columns = [schema_field.name for schema_field in table.schema]
+
+    return "btc_php_upper" or "btc_php_lower" in existing_columns
+
+    
 @flow(name="BTC Price Ingestion Daily")
-def ingestion_flow_daily():
+def ingestion_flow_daily(gcp_creds):
     price = fetch_btc_daily()
     df = create_df_daily(price)
-    load_to_bq_daily(df)
+    load_to_bq_daily(df, gcp_creds)
 
 @flow(name="BTC Price Ingestion Historical")
-def ingestion_flow_historical():
+def ingestion_flow_historical(gcp_creds):
     data = fetch_btc_historical()
     df = create_df_historical(data)
-    load_to_bq_historical(df)
+    load_to_bq_historical(df, gcp_creds)
+
+@flow(name="BTC Price Ingestion 7D Volatility Prediction")
+def volatility_prediction_flow(gcp_creds):
+    exists = check_volatility_prediction_exists(gcp_creds)
+    
 
 if __name__ == "__main__":
-    ingestion_flow_daily()
-    ingestion_flow_historical()
+    gcp_credentials_block = GcpCredentials.load("gcp-bgq-creds")
+    ingestion_flow_daily(gcp_credentials_block)
+    ingestion_flow_historical(gcp_credentials_block)
+    volatility_prediction_flow(gcp_credentials_block)
