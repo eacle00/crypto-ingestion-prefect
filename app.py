@@ -4,7 +4,6 @@ from prefect_gcp import GcpCredentials
 from google.cloud import bigquery
 import pandas as pd
 import numpy as np
-import json
 import requests
 
 
