@@ -91,6 +91,6 @@ def ingestion_flow_historical(gcp_creds):
 
 
 if __name__ == "__main__":
-    gcp_credentials_block = GcpCredentials.load("gcp-bgq-creds")
+    gcp_credentials_block = GcpCredentials.load("gcp-creds")
     ingestion_flow_daily(gcp_credentials_block)
     ingestion_flow_historical(gcp_credentials_block)
