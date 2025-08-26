@@ -76,18 +76,6 @@ def load_to_bq_historical(df: pd.DataFrame, gcp_creds):
         credentials = gcp_creds.get_credentials_from_service_account(),
         if_exists = 'replace'
     )
-
-# Tasks for Weekly BTC Volatility Prediction Using GARCH
-@task 
-def check_volatility_prediction_exists(gcp_creds):
-    credentials = gcp_creds.get_credentials_from_service_account()
-    client = bigquery.Client(credentials=credentials, project=gcp_creds.project)
-    table_ref = f"{gcp_creds.project}.crypto_coins.btc_price"
-    table = client.get_table(table_ref)
-    existing_columns = [schema_field.name for schema_field in table.schema]
-
-    return "btc_php_upper" or "btc_php_lower" in existing_columns
-
     
 @flow(name="BTC Price Ingestion Daily")
 def ingestion_flow_daily(gcp_creds):
@@ -101,13 +89,8 @@ def ingestion_flow_historical(gcp_creds):
     df = create_df_historical(data)
     load_to_bq_historical(df, gcp_creds)
 
-@flow(name="BTC Price Ingestion 7D Volatility Prediction")
-def volatility_prediction_flow(gcp_creds):
-    exists = check_volatility_prediction_exists(gcp_creds)
-    
 
 if __name__ == "__main__":
     gcp_credentials_block = GcpCredentials.load("gcp-bgq-creds")
     ingestion_flow_daily(gcp_credentials_block)
     ingestion_flow_historical(gcp_credentials_block)
-    volatility_prediction_flow(gcp_credentials_block)
