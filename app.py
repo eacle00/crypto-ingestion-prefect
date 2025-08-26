@@ -1,9 +1,7 @@
 from prefect import flow, task
 from datetime import datetime
 from prefect_gcp import GcpCredentials
-from google.cloud import bigquery
 import pandas as pd
-import numpy as np
 import requests
 
 
@@ -78,19 +76,20 @@ def load_to_bq_historical(df: pd.DataFrame, gcp_creds):
     )
     
 @flow(name="BTC Price Ingestion Daily")
-def ingestion_flow_daily(gcp_creds):
+def ingestion_flow_daily():
+    gcp_credentials_block = GcpCredentials.load("gcp-creds")
     price = fetch_btc_daily()
     df = create_df_daily(price)
-    load_to_bq_daily(df, gcp_creds)
+    load_to_bq_daily(df, gcp_credentials_block)
 
 @flow(name="BTC Price Ingestion Historical")
-def ingestion_flow_historical(gcp_creds):
+def ingestion_flow_historical():
+    gcp_credentials_block = GcpCredentials.load("gcp-creds")
     data = fetch_btc_historical()
     df = create_df_historical(data)
-    load_to_bq_historical(df, gcp_creds)
+    load_to_bq_historical(df, gcp_credentials_block)
 
 
 if __name__ == "__main__":
-    gcp_credentials_block = GcpCredentials.load("gcp-creds")
-    ingestion_flow_daily(gcp_credentials_block)
-    ingestion_flow_historical(gcp_credentials_block)
+    ingestion_flow_daily()
+    ingestion_flow_historical()
